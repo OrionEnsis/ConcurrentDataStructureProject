@@ -6,7 +6,8 @@ import java.util.ArrayList;
 
 public class Controller {
     private ArrayList<String>[] twitchchatlogs;
-
+    ChatScraper cs;
+    Thread t;
     @FXML
     private void start(){
         int cores = Runtime.getRuntime().availableProcessors();
@@ -15,7 +16,10 @@ public class Controller {
             s = new ArrayList<>();
         }
         try{
-            ChatScraper cs = new ChatScraper(null,null);
+
+            cs = new ChatScraper();
+            t = new Thread(cs);
+            t.start();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -28,5 +32,15 @@ public class Controller {
         //begin testing both concurrent hashtable and concurrent frequency table for each core possibility
 
         //show graphed results.
+    }
+
+    @FXML
+    private void stop(){
+        try{
+            cs.stop();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
     }
 }
