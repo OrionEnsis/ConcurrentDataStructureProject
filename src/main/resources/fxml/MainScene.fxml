@@ -33,5 +33,6 @@
       </content>
     </ScrollPane>
     <Button id="stopButton" layoutX="357.0" layoutY="365.0" mnemonicParsing="false" onAction="#stop" text="Stop!" />
+    <Button id="simulateButton" layoutX="273.0" layoutY="189.0" mnemonicParsing="false" onAction="#simulate" text="Simlulate" />
   </children>
 </AnchorPane>
