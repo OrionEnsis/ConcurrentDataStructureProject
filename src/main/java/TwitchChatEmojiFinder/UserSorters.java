@@ -1,37 +1,37 @@
 package TwitchChatEmojiFinder;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
+import java.util.HashMap;
+import java.util.Queue;
 
 public class UserSorters implements Runnable {
-    public ArrayList<String> users;
-    ConcurrentLinkedQueue<String> unSortedLogs;
+    Queue<String> unSortedLogs;
+    HashMap<String,UserWordCalculator> userWordCalculators;
 
-    public UserSorters(ConcurrentLinkedQueue<String> queue){
+    public UserSorters(Queue<String> queue,HashMap<String,UserWordCalculator> userWordCalculators){
         unSortedLogs = queue;
+        this.userWordCalculators = userWordCalculators;
     }
 
     @Override
     public void run() {
-        Hashtable<String, HashSet<String>> userTables = new Hashtable<>();
-        for (String user :
-                users) {
-            userTables.put(user,new HashSet<>());
-        }
+
         int failCount = 0;
-        while(failCount < 5){
-            if(users.contains(unSortedLogs.peek().split(" ")[0])){
-                String t = unSortedLogs.poll();
-                userTables.get(t.split(" ")[0]).add(t);
+        while(failCount < 5 && !Thread.interrupted()){
+            //System.out.println(unSortedLogs.size());
+            String t = unSortedLogs.poll();
+            if(t != null) {
+                String userName = t.split(" ")[0];
+                for (int i = 1; i < t.split(" ").length; i++) {
+                    userWordCalculators.get(userName).unprocessedWords.offer(t.split(" ")[i]);
+                }
                 failCount = 0;
             }
-            else if(users.size() == 0){
+            else{
                 failCount++;
             }
-            else
-                failCount =0;
+
         }
+        System.out.print("User Sorting Done");
     }
 }

@@ -1,18 +1,27 @@
-package TwitchChatEmojiFinder;
+package TwitchChatEmojiFinder.GUI;
 
+import TwitchChatEmojiFinder.ChatScraper;
+import TwitchChatEmojiFinder.LogLoader;
+import TwitchChatEmojiFinder.UserSorters;
+import TwitchChatEmojiFinder.UserWordCalculator;
 import javafx.fxml.FXML;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.Queue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Controller {
     ExecutorService executorService;
     ChatScraper cs;
     Thread t;
-    ConcurrentLinkedQueue<String> logsUnprocessed;
+    Queue<String> logsUnprocessed;
     @FXML
     private void start(){
         try{
@@ -41,7 +50,7 @@ public class Controller {
         executorService = Executors.newFixedThreadPool(cores);
         ArrayList<LogLoader> logLoaders = new ArrayList<>();
         ArrayList<UserSorters> userSorters = new ArrayList<>();
-        ArrayList<String> users = new ArrayList<>();
+        HashMap<String, UserWordCalculator> userWordCalculators = new HashMap<>();
 
         //setup storers
         try{
@@ -50,7 +59,7 @@ public class Controller {
 
             String user = br.readLine();
             while(user != null){
-                users.add(user);
+                userWordCalculators.put(user,new UserWordCalculator(user));
                 user = br.readLine();
             }
 
@@ -63,10 +72,7 @@ public class Controller {
         logsUnprocessed = new ConcurrentLinkedQueue<>();
         for (int i=0; i < coresPerTask; i++){
             logLoaders.add(new LogLoader("chatlog.txt",logsUnprocessed));
-            userSorters.add(new UserSorters(logsUnprocessed));
-        }
-        for (int i = 0; i < users.size(); i++) {
-            userSorters.get(i%coresPerTask).users.add(users.get(i));
+            userSorters.add(new UserSorters(logsUnprocessed,userWordCalculators));
         }
 
         //start all
@@ -74,13 +80,17 @@ public class Controller {
             executorService.execute(logLoaders.get(i));
             executorService.execute(userSorters.get(i));
         }
-
+        //executorService.execute(userSorters.get(0));
         executorService.shutdown();
         try {
-            executorService.awaitTermination(1,TimeUnit.DAYS);
+            executorService.awaitTermination(1, TimeUnit.DAYS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.print("Waiting for Queues to finish");
+        userWordCalculators.forEach((k,v)->{
+            new Thread(v).start();
+        });
         System.out.println("Simulation Complete");
 
     }
