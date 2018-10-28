@@ -115,10 +115,21 @@ public class ConcurrentQueue<T> implements Queue<T> {
 
     @Override
     public boolean offer(T o) {
-        boolean result;
+        boolean result = false;
         try {
             lock.lock();
-            result = add(o);
+            Node n = head;
+            if(head == null){
+                head = new Node(o);
+            }
+            else{
+                while(n.next != null){
+                    n = n.next;
+                }
+                n.next = new Node(o);
+                size++;
+                result = true;
+            }
         } finally{
             lock.unlock();
         }
@@ -149,7 +160,9 @@ public class ConcurrentQueue<T> implements Queue<T> {
         T x;
         try {
             lock.lock();
-            x = remove();
+            x = head.data;
+            head = head.next;
+            size--;
         } finally{
             lock.unlock();
         }

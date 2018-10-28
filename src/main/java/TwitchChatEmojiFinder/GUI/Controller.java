@@ -1,6 +1,7 @@
 package TwitchChatEmojiFinder.GUI;
 
 import TwitchChatEmojiFinder.ChatScraper;
+import TwitchChatEmojiFinder.Collections.ConcurrentQueue;
 import TwitchChatEmojiFinder.LogLoader;
 import TwitchChatEmojiFinder.UserSorters;
 import TwitchChatEmojiFinder.UserWordCalculator;
@@ -69,7 +70,7 @@ public class Controller {
 
 
         //setup logLoadets
-        logsUnprocessed = new ConcurrentLinkedQueue<>();
+        logsUnprocessed = new ConcurrentQueue<>();
         for (int i=0; i < coresPerTask; i++){
             logLoaders.add(new LogLoader("chatlog.txt",logsUnprocessed));
             userSorters.add(new UserSorters(logsUnprocessed,userWordCalculators));
