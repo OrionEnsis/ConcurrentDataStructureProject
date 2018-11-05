@@ -106,6 +106,7 @@ public class FrequencyTable<T> implements Serializable{
         }
         else if(value > getHighValue()){
             highKey = key;
+            highValue = value;
         }
     }
     public void remove(T key){

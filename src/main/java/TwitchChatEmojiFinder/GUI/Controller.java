@@ -1,12 +1,10 @@
 package TwitchChatEmojiFinder.GUI;
 
-import TwitchChatEmojiFinder.ChatScraper;
 import TwitchChatEmojiFinder.Collections.ConcurrentQueue;
 import TwitchChatEmojiFinder.LogLoader;
 import TwitchChatEmojiFinder.UserSorters;
 import TwitchChatEmojiFinder.UserWordCalculator;
-import javafx.fxml.FXML;
-
+import org.openjdk.jmh.annotations.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -18,37 +16,14 @@ import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+@State(Scope.Thread)
 public class Controller {
-    ExecutorService executorService;
-    ChatScraper cs;
-    Thread t;
-    Queue<String> logsUnprocessed;
-    @FXML
-    private void start(){
-        try{
 
-            cs = new ChatScraper();
-            t = new Thread(cs);
-            t.start();
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-        //get cores and set up visual feedback
-
-        //send each to a twitch and get words.
-
-        //begin testing both concurrent hashtable and concurrent frequency table for each core possibility
-
-        //show graphed results.
-    }
-    @FXML
-    private void simulate(){
+    private void simulate(Queue<String> q){
         //get number of cores
         int cores = Runtime.getRuntime().availableProcessors();
-        int coresPerTask = cores/2;//split cores in half.
-        executorService = Executors.newFixedThreadPool(cores);
+        int coresPerTask = cores/2;     //split cores in half.
+        ExecutorService executorService = Executors.newFixedThreadPool(cores);
         ArrayList<LogLoader> logLoaders = new ArrayList<>();
         ArrayList<UserSorters> userSorters = new ArrayList<>();
         HashMap<String, UserWordCalculator> userWordCalculators = new HashMap<>();
@@ -69,12 +44,10 @@ public class Controller {
         }
 
 
-        //setup logLoadets
-        logsUnprocessed = new ConcurrentQueue<>();
         //logsUnprocessed = new ConcurrentLinkedQueue<>();
         for (int i=0; i < coresPerTask; i++){
-            logLoaders.add(new LogLoader("chatlog.txt",logsUnprocessed));
-            userSorters.add(new UserSorters(logsUnprocessed,userWordCalculators));
+            logLoaders.add(new LogLoader("chatlog.txt", q));
+            userSorters.add(new UserSorters(q,userWordCalculators));
         }
 
         //start all
@@ -90,21 +63,41 @@ public class Controller {
             e.printStackTrace();
         }
         System.out.print("Waiting for Queues to finish");
-        userWordCalculators.forEach((k,v)->{
-            new Thread(v).start();
-        });
+        ArrayList<Thread> alt = new ArrayList<>();
+        userWordCalculators.forEach((k,v)-> alt.add(new Thread(v)));
+        alt.forEach(Thread::start);
+        try{
+            for (Thread thread : alt) {
+                thread.join();
+            }
+        }
+        catch(InterruptedException e){
+            e.printStackTrace();
+        }
+
         System.out.println("Simulation Complete");
 
     }
 
+    @Benchmark
+    @BenchmarkMode(Mode.SampleTime)
+    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.MICROSECONDS)
+    //@Fork(1)
+    public void simulateForJava() {
+        Queue<String> q = new ConcurrentLinkedQueue<>();
+        simulate(q);
 
-    @FXML
-    private void stop(){
-        try{
-            cs.stop();
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
     }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SampleTime)
+    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.MICROSECONDS)
+    //@Fork(1)
+    public void simulateForMe(){
+        Queue<String> q = new ConcurrentQueue<>();
+        simulate(q);
+    }
+
 }

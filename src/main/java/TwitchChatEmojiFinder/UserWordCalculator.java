@@ -1,17 +1,19 @@
 package TwitchChatEmojiFinder;
 
+import TwitchChatEmojiFinder.Collections.FrequencyTable;
+
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Queue;
 
 public class UserWordCalculator implements Runnable {
-    String userName;
-    HashSet<String> words;
+    private String userName;
+    private FrequencyTable<String> words;
     Queue<String> unprocessedWords;
 
     public UserWordCalculator(String userName){
         this.userName = userName;
-        words = new HashSet<>();
+        words = new FrequencyTable<>();
         unprocessedWords = new ConcurrentLinkedQueue<>();
     }
 
@@ -23,13 +25,14 @@ public class UserWordCalculator implements Runnable {
             //System.out.println(unprocessedWords.size());
             String t = unprocessedWords.poll();
             if(t != null) {
-                words.add(t);
+                words.put(t,1);
                 failCount = 0;
             }
             else{
                 failCount++;
             }
         }
-        System.out.println("Word sorting done for " + userName);
+        System.out.println("Word sorting done for " + userName + ".  Highest word was " + words.getHighKey() + " at " +
+                words.getHighValue() + " times said.");
     }
 }

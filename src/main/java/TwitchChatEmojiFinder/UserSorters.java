@@ -32,6 +32,6 @@ public class UserSorters implements Runnable {
             }
 
         }
-        System.out.print("User Sorting Done");
+        System.out.println("User Sorting Done");
     }
 }

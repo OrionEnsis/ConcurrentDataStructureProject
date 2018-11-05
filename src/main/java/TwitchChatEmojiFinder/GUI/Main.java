@@ -1,24 +1,19 @@
 package TwitchChatEmojiFinder.GUI;
 
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
 
-public class Main extends Application {
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-    @Override
-    public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/MainScene.fxml"));
-        primaryStage.setTitle("Twitch Emoji Finder");
-        primaryStage.setScene(new Scene(root, 600, 400));
-        primaryStage.show();
-    }
+public class Main{
 
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(Controller.class.getSimpleName())
+                .forks(1)
+                .build();
 
-    public static void main(String[] args) {
-        launch(args);
-
+        new Runner(opt).run();
     }
 }
