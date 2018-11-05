@@ -13,19 +13,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class ChatScraper extends ListenerAdapter implements Runnable {
-    Configuration config;
+    private Configuration config;
     ArrayList<String> chats;
-    PircBotX bot;
-    HashSet<String> users;
+    private PircBotX bot;
+    private HashSet<String> users;
 
-    String chatfile = "chatlog.txt";
-    String userfile = "unique_users.txt";
-    FileWriter chatWriter;
-    FileWriter userWriter ;
-    BufferedWriter brc;
-    BufferedWriter bru;
+    private String chatfile = "chatlog.txt";
+    private String userfile = "unique_users.txt";
+    private FileWriter chatWriter;
+    private FileWriter userWriter;
+    private BufferedWriter brc;
+    private BufferedWriter bru;
 
+    @SuppressWarnings("DefaultCharset")
     public ChatScraper() throws IOException {
         super();
         chatWriter = new FileWriter(chatfile,true);
@@ -66,9 +68,7 @@ public class ChatScraper extends ListenerAdapter implements Runnable {
         try {
             System.out.println("Bot Started");
             bot.startBot();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IrcException e) {
+        }  catch (IrcException | IOException e) {
             e.printStackTrace();
         }
 

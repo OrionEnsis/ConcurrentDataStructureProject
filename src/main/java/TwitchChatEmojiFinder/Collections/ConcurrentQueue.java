@@ -33,7 +33,7 @@ public class ConcurrentQueue<T> implements Queue<T> {
     }
 
     @Override
-    public int size() {
+    public synchronized int size() {
         return size;
     }
 
@@ -65,8 +65,8 @@ public class ConcurrentQueue<T> implements Queue<T> {
     //TODO write this
     @Override
     public boolean add(T o) {
+        lock.lock();
         try{
-            lock.lock();
             Node n = head;
             if(head == null){
                 head = new Node(o);
@@ -78,14 +78,16 @@ public class ConcurrentQueue<T> implements Queue<T> {
                 }
                 n.next = new Node(o);
                 tail = n.next;
-                size++;
+                changeSize(1);
             }
         } finally{
             lock.unlock();
         }
         return false;
     }
-
+    private synchronized void changeSize(int i){
+        size+= i;
+    }
     @Override
     public boolean remove(Object o) {
 
@@ -131,7 +133,7 @@ public class ConcurrentQueue<T> implements Queue<T> {
             else
                 last.next = tail;
             result = true;
-            size++;
+            changeSize(1);
         } finally{
             lock.unlock();
         }
@@ -150,7 +152,7 @@ public class ConcurrentQueue<T> implements Queue<T> {
             }
             object = head.data;
             head = head.next;
-            size--;
+            changeSize(-1);
 
         } finally{
             lock.unlock();
@@ -169,7 +171,7 @@ public class ConcurrentQueue<T> implements Queue<T> {
             if(head != null) {
                 x = head.data;
                 head = head.next;
-                size--;
+                changeSize(-1);
             }
 
         } finally{

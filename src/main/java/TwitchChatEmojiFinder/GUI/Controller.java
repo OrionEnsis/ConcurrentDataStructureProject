@@ -19,8 +19,10 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Thread)
 public class Controller {
     @Param({"1","2","4","8","16","32"})
+    //@Param({"1"})
     private int producers;
     @Param({"1","2","4","8","16","32"})
+    //@Param({"1"})
     private int consumers;
     private void simulate(Queue<String> q){
         //get number of cores

@@ -34,6 +34,11 @@ public class Main{
         System.out.println("Secondary Results: " + result.getSecondaryResults().toString());
         rl.forEach(k-> {
             stringJoiner.add(k.getParams().getBenchmark());
+            stringJoiner.add("Producers");
+            stringJoiner.add(k.getParams().getParam("producers"));
+            stringJoiner.add("Consumers");
+            stringJoiner.add(k.getParams().getParam("consumers"));
+            stringJoiner.add(k.getParams().getBenchmark());
             stringJoiner.add(k.getPrimaryResult().toString());
         });
         FileWriter fileWriter = new FileWriter("jmhQueueResults.csv");
