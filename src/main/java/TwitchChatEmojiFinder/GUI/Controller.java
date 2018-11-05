@@ -18,12 +18,13 @@ import java.util.concurrent.TimeUnit;
 
 @State(Scope.Thread)
 public class Controller {
-
+    @Param({"1","2","4","8","16","32"})
+    private int producers;
+    @Param({"1","2","4","8","16","32"})
+    private int consumers;
     private void simulate(Queue<String> q){
         //get number of cores
-        int cores = Runtime.getRuntime().availableProcessors();
-        int coresPerTask = cores/2;     //split cores in half.
-        ExecutorService executorService = Executors.newFixedThreadPool(cores);
+        ExecutorService executorService = Executors.newFixedThreadPool(producers+consumers);
         ArrayList<LogLoader> logLoaders = new ArrayList<>();
         ArrayList<UserSorters> userSorters = new ArrayList<>();
         HashMap<String, UserWordCalculator> userWordCalculators = new HashMap<>();
@@ -45,17 +46,18 @@ public class Controller {
 
 
         //logsUnprocessed = new ConcurrentLinkedQueue<>();
-        for (int i=0; i < coresPerTask; i++){
+        for (int i=0; i < producers; i++){
             logLoaders.add(new LogLoader("chatlog.txt", q));
+        }
+
+        for (int i=0; i < consumers; i++){
             userSorters.add(new UserSorters(q,userWordCalculators));
         }
 
         //start all
-        for (int i = 0; i < coresPerTask; i++) {
-            executorService.execute(logLoaders.get(i));
-            executorService.execute(userSorters.get(i));
-        }
-        //executorService.execute(userSorters.get(0));
+        logLoaders.forEach(executorService::execute);
+        userSorters.forEach(executorService::execute);
+
         executorService.shutdown();
         try {
             executorService.awaitTermination(1, TimeUnit.DAYS);
