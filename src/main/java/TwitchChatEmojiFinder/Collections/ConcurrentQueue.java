@@ -15,11 +15,13 @@ public class ConcurrentQueue<T> implements Queue<T> {
 
     private final class Node{
         Node next;
+        Node prev;
         T data;
 
         public Node(T data){
             this.data = data;
             next = null;
+            size = 0;
         }
 
     }
@@ -68,12 +70,14 @@ public class ConcurrentQueue<T> implements Queue<T> {
             Node n = head;
             if(head == null){
                 head = new Node(o);
+                tail = head;
             }
             else{
                 while(n.next != null){
                     n = n.next;
                 }
                 n.next = new Node(o);
+                tail = n.next;
                 size++;
             }
         } finally{
@@ -113,34 +117,34 @@ public class ConcurrentQueue<T> implements Queue<T> {
 
     }
 
+    //ready for testing
     @Override
     public boolean offer(T o) {
         boolean result = false;
+        lock.lock();
         try {
-            lock.lock();
-            Node n = head;
-            if(head == null){
-                head = new Node(o);
-            }
-            else{
-                while(n.next != null){
-                    n = n.next;
-                }
-                n.next = new Node(o);
-                size++;
-                result = true;
-            }
+
+            Node last = tail;
+            tail = new Node(o);
+            if(head == null)
+                head = tail;
+            else
+                last.next = tail;
+            result = true;
+            size++;
         } finally{
             lock.unlock();
         }
         return result;
     }
 
+    //not ready for testing
     @Override
     public T remove() throws NoSuchElementException {
         T object = null;
+        lock.lock();
         try{
-            lock.lock();
+
             if (head == null){
                 throw new NoSuchElementException();
             }
@@ -157,12 +161,17 @@ public class ConcurrentQueue<T> implements Queue<T> {
 
     @Override
     public T poll() {
-        T x;
+        T x = null;
+        lock.lock();
         try {
-            lock.lock();
-            x = head.data;
-            head = head.next;
-            size--;
+
+            //get the data
+            if(head != null) {
+                x = head.data;
+                head = head.next;
+                size--;
+            }
+
         } finally{
             lock.unlock();
         }

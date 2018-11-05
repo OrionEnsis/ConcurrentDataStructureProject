@@ -71,6 +71,7 @@ public class Controller {
 
         //setup logLoadets
         logsUnprocessed = new ConcurrentQueue<>();
+        //logsUnprocessed = new ConcurrentLinkedQueue<>();
         for (int i=0; i < coresPerTask; i++){
             logLoaders.add(new LogLoader("chatlog.txt",logsUnprocessed));
             userSorters.add(new UserSorters(logsUnprocessed,userWordCalculators));
