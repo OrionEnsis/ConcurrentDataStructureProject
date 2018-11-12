@@ -46,7 +46,6 @@ public class Controller {
             e.printStackTrace();
         }
 
-
         //logsUnprocessed = new ConcurrentLinkedQueue<>();
         for (int i=0; i < producers; i++){
             logLoaders.add(new LogLoader("chatlog.txt", q));

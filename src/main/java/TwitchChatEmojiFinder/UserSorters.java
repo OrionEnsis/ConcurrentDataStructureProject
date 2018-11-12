@@ -18,7 +18,6 @@ public class UserSorters implements Runnable {
 
         int failCount = 0;
         while(failCount < 5 && !Thread.interrupted()){
-            //System.out.println(unSortedLogs.size());
             String t = unSortedLogs.poll();
             if(t != null) {
                 String userName = t.split(" ")[0];

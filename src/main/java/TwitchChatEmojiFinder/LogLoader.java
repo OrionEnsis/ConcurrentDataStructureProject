@@ -29,7 +29,7 @@ public class LogLoader implements Runnable {
 
     @Override
     public void run() {
-        for(int i = 0; i < 100; i++){
+        for(int i = 0; i < 10; i++){
             for (String s: logs) {
                 queue.offer(s);
             }

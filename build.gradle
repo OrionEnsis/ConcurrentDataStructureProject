@@ -15,7 +15,7 @@ repositories {
     mavenCentral()
 }
 
-//buildDir = 'TwitchChatEmojiFinder'
+
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile 'org.pircbotx:pircbotx:2.1'
@@ -25,6 +25,13 @@ dependencies {
 }
 apply plugin: 'java'
 apply plugin: 'net.ltgt.errorprone'
-//apply plugin: 'javafx-gradle-plugin'
 apply plugin: 'me.champeau.gradle.jmh'
+
+jar{
+    manifest{
+        attributes 'Main-Class': 'TwitchChatEmojiFinder.GUI.Main'
+    }
+    from configurations.runtime.collect { zipTree(it) }
+}
+
 
