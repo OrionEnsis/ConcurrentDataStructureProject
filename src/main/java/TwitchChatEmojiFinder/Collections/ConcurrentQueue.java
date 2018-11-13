@@ -4,24 +4,25 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ConcurrentQueue<T> implements Queue<T> {
 
-    private volatile int size;
+    private AtomicInteger size;
     private Node head;
     private Node tail;
-    private ReentrantLock lock;
+    private Semaphore lock;
 
     private final class Node{
         Node next;
-        Node prev;
         T data;
 
         public Node(T data){
             this.data = data;
             next = null;
-            size = 0;
+
         }
 
     }
@@ -29,17 +30,19 @@ public class ConcurrentQueue<T> implements Queue<T> {
     public ConcurrentQueue(){
         head = null;
         tail = null;
-        lock = new ReentrantLock();
+        lock = new Semaphore(1);
+        size = new AtomicInteger();
     }
 
     @Override
     public synchronized int size() {
-        return size;
+        System.out.println("mqueue: "+size.get());
+        return size.get();
     }
 
     @Override
     public boolean isEmpty() {
-        return size == 0;
+        return size.get() == 0;
     }
 
     @Override
@@ -62,11 +65,11 @@ public class ConcurrentQueue<T> implements Queue<T> {
         return null;
     }
 
-    //TODO write this
     @Override
     public boolean add(T o) {
-        lock.lock();
+
         try{
+            lock.acquire();
             Node n = head;
             if(head == null){
                 head = new Node(o);
@@ -78,16 +81,16 @@ public class ConcurrentQueue<T> implements Queue<T> {
                 }
                 n.next = new Node(o);
                 tail = n.next;
-                changeSize(1);
+                size.addAndGet(1);
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally{
-            lock.unlock();
+            lock.release();
         }
         return false;
     }
-    private synchronized void changeSize(int i){
-        size+= i;
-    }
+
     @Override
     public boolean remove(Object o) {
 
@@ -123,9 +126,9 @@ public class ConcurrentQueue<T> implements Queue<T> {
     @Override
     public boolean offer(T o) {
         boolean result = false;
-        lock.lock();
-        try {
 
+        try {
+            lock.acquire();
             Node last = tail;
             tail = new Node(o);
             if(head == null)
@@ -133,9 +136,13 @@ public class ConcurrentQueue<T> implements Queue<T> {
             else
                 last.next = tail;
             result = true;
-            changeSize(1);
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally{
-            lock.unlock();
+            size.addAndGet(1);
+            //System.out.println("offer" + size.get());
+            lock.release();
         }
         return result;
     }
@@ -144,18 +151,20 @@ public class ConcurrentQueue<T> implements Queue<T> {
     @Override
     public T remove() throws NoSuchElementException {
         T object = null;
-        lock.lock();
-        try{
 
+        try{
+            lock.acquire();
             if (head == null){
                 throw new NoSuchElementException();
             }
             object = head.data;
             head = head.next;
-            changeSize(-1);
+            size.addAndGet(-1);
 
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally{
-            lock.unlock();
+            lock.release();
         }
         return object;
     }
@@ -164,18 +173,21 @@ public class ConcurrentQueue<T> implements Queue<T> {
     @Override
     public T poll() {
         T x = null;
-        lock.lock();
-        try {
 
+        try {
+            lock.acquire();
             //get the data
             if(head != null) {
                 x = head.data;
                 head = head.next;
-                changeSize(-1);
+                if(x != null)
+                    size.addAndGet(-1);
             }
-
+            //System.out.println("poll");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally{
-            lock.unlock();
+            lock.release();
         }
         return x;
     }

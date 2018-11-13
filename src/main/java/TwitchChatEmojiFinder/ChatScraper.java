@@ -13,13 +13,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-@SuppressWarnings("FieldCanBeLocal")
+@SuppressWarnings({"FieldCanBeLocal","CatchAndPrintStackTrace"})
 public class ChatScraper extends ListenerAdapter implements Runnable {
     private Configuration config;
     ArrayList<String> chats;
     private PircBotX bot;
     private HashSet<String> users;
-
     private String chatfile = "chatlog.txt";
     private String userfile = "unique_users.txt";
     private FileWriter chatWriter;

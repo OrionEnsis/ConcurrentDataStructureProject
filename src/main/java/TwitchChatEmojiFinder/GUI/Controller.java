@@ -1,5 +1,6 @@
 package TwitchChatEmojiFinder.GUI;
 
+import TwitchChatEmojiFinder.Collections.BufferQueue;
 import TwitchChatEmojiFinder.Collections.ConcurrentQueue;
 import TwitchChatEmojiFinder.LogLoader;
 import TwitchChatEmojiFinder.UserSorters;
@@ -10,26 +11,31 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 import java.util.Queue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
+@SuppressWarnings("CatchAndPrintStackTrace")
 @State(Scope.Thread)
 public class Controller {
-    @Param({"1","2","4","8","16","32"})
-    //@Param({"1"})
-    private int producers;
-    @Param({"1","2","4","8","16","32"})
-    //@Param({"1"})
-    private int consumers;
+    public static Semaphore semaphore;
+    public static boolean producersFinished(){
+        //System.out.println(semaphore.availablePermits() + " " + producers);
+        return semaphore.availablePermits() == producers;
+    }
+    //@Param({"1","2","4","8","16","32"})
+    @Param({"32"})
+    private static int producers;
+    //@Param({"1","2","4","8","16","32"})
+    @Param({"32"})
+    private static int consumers;
     private void simulate(Queue<String> q){
+        //producers = 4;
+        //consumers = 1;
         //get number of cores
         ExecutorService executorService = Executors.newFixedThreadPool(producers+consumers);
         ArrayList<LogLoader> logLoaders = new ArrayList<>();
         ArrayList<UserSorters> userSorters = new ArrayList<>();
         HashMap<String, UserWordCalculator> userWordCalculators = new HashMap<>();
+        semaphore = new Semaphore(producers);
 
         //setup storers
         try{
@@ -54,10 +60,16 @@ public class Controller {
         for (int i=0; i < consumers; i++){
             userSorters.add(new UserSorters(q,userWordCalculators));
         }
-
+        try {
+            //semaphore.acquire();
+            logLoaders.forEach(executorService::execute);
+            userSorters.forEach(executorService::execute);
+        //} //catch (InterruptedException e) {
+            //e.printStackTrace();
+        } finally{
+            //semaphore.release();
+        }
         //start all
-        logLoaders.forEach(executorService::execute);
-        userSorters.forEach(executorService::execute);
 
         executorService.shutdown();
         try {
@@ -100,6 +112,15 @@ public class Controller {
     //@Fork(1)
     public void simulateForMe(){
         Queue<String> q = new ConcurrentQueue<>();
+        simulate(q);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SampleTime)
+    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.MICROSECONDS)
+    public void simulateForBuffer(){
+        Queue<String> q = new BufferQueue<>();
         simulate(q);
     }
 
